@@ -47,3 +47,10 @@ Ideas for even more realistic data:
 - discount on nb of years customers have been subscribing (renew=True)
 - discount on number of license customers are currently subscribing (renew=True)
 
+## Validation step
+
+### Validation script
+
+To run validation script; enter on a shell
+
+`uv run validation.py`
