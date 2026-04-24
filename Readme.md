@@ -18,15 +18,13 @@ Run the following script: `uv run main_data_generation.py`
 Parameters are defined in the script `main_data_generation.py`
 ### modification:
 
-modification can happen at every time
+
 
 ### type modelling
 
-Define transition dynamics
+Define transition dynamics using Markov Chain
 
-We define a
-
-6 transition matrix where each row represents probabilities of moving between states.
+We define a 6 transition matrix where each row represents probabilities of moving between states.
 
 🧩 Conceptual model
 
@@ -51,6 +49,22 @@ Ideas for even more realistic data:
 
 ### Validation script
 
-To run validation script; enter on a shell
+To run validation script; enter in a terminal
 
 `uv run validation.py`
+
+## Transformation step
+
+### Transformation with python/pandas
+To run transformation, enter in a terminal
+`uv run transformation.py`
+
+The script requieres both csv files `initial_licenses.csv`and `license_changes.csv` in `csv`folder
+It outputs `transformed.csv` in the `csv` folder.
+
+### Transformation with SQL request
+Please see answer in the file named : `req.sql`
+**Regarding question about database architecture.**
+First, regarding the database creation, it could be nice to inculde a foreign key referring to initial_licenses 's `id`. 
+Second; The script made to perform transform is too big: one could consider create all the intermediate table 
+where i had to use CTE. 
