@@ -47,15 +47,28 @@ def simulate_markov_single(dates: Sequence, initial_state: str, transition_matri
     main_states = labeled_states.copy()
      # --- main state with forward fill ---
     main_states = np.empty(k, dtype=object)
-
+    renew_flag = np.zeros(k, dtype=bool)
     # --- Output 2: renewal indicator ---
-    renew_flag = np.char.startswith(labeled_states.astype(str), "RENEW")
-    last_valid = None
-
+    # renew_flag = np.char.startswith(labeled_states.astype(str), "RENEW")
+    active_block = True # default
     for t in range(k):
-        if not renew_flag[t]:
+        is_renew = str(labeled_states[t]).startswith("RENEW")
+        
+        if is_renew:
+            active_block = not active_block   # next non-renew 
+            renew_flag[t] = active_block
+            main_states[t] = last_valid
+        else:
+            renew_flag[t] = active_block
             last_valid = labeled_states[t]
-        main_states[t] = last_valid
+            main_states[t] = last_valid
+
+
+
+    # for t in range(k):
+    #     if not renew_flag[t]:
+    #         last_valid = labeled_states[t]
+    #     main_states[t] = last_valid
 
     
     # trajectory = np.array(

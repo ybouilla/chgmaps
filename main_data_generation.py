@@ -105,7 +105,8 @@ if __name__ == '__main__':
     print("checks", [len(v) for v in created_licenses.values()])
 
     df2 = pd.DataFrame(created_licenses)
+    df2.index.name = "id"
 
-    df2.to_csv(os.path.join(folder_name, file_name_changed_licenses), index=False)
+    df2.to_csv(os.path.join(folder_name, file_name_changed_licenses), )
 
     print("Data generation completed")
