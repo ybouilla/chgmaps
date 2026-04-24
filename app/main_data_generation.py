@@ -3,8 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from utils.markov_chain import simulate_markov_single
-from utils.data_generation import generate_creation_dates, generate_pareto, generate_type_licenses, generate_dates
+from app.utils.markov_chain import simulate_markov_single
+from app.utils.data_generation import generate_creation_dates, generate_pareto, generate_type_licenses, generate_dates
 
 # parameters
 RANDOM_SEED = 1234
@@ -34,7 +34,7 @@ max_price = 5000
 # SUPERVISION : 5000
 
 type_license_available = ("PASS", "SIM", "SUPERVISION",)
-type_prob_distr = (.5, .3, .2,)
+type_prob_distr = (.5, .3, .2,)  # random markov initial states
 mapping_price_type = {"PASS":100,  "SIM":1000, "SUPERVISION": 5000}
 
 # using markov chain to generate several states
