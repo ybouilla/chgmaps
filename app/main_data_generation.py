@@ -1,4 +1,5 @@
 
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -18,9 +19,9 @@ folder_name = "csv"
 nb_id: int = 100 # number of license_id
 nb_modif: int = 10_000
 
-nb_customer_ids: int = 20  # number of different customer
-prop_customer_1_license = .4
-prop_customer_2_licenses = .4
+# nb_customer_ids: int = 20  # number of different customers
+# prop_customer_1_license = .4 # proportion of customers having only one license
+# prop_customer_2_licenses = .4 # proportion of customers having 2 licenses
 
 
 min_param_date: str = '2023-01-01'
@@ -49,10 +50,42 @@ transition_matrix = np.array([[.2, .6, .1, .1, .0, .0  ],# type:PASS
 
 state_labels = np.array(["PASS", "SUPERVISION", "SIM", "RENEW_PASS", "RENEW_SUPERVISION", "RENEW_SIM",])
 
-if __name__ == '__main__':
+def parse_args():
+    parser = argparse.ArgumentParser(description="Synthetic license data generator")
 
-    np.random.seed(RANDOM_SEED)
-    # buiding csv 1: 
+    parser.add_argument("--nb_id", type=int, default=nb_id,
+                        help="Number of license IDs")
+
+    parser.add_argument("--nb_modif", type=int, default=nb_modif,
+                        help="Number of modifications")
+
+    parser.add_argument("--rand_seed", type=int, default=RANDOM_SEED,
+                        help="Random Seed")
+
+    parser.add_argument("--min_param_date", type=str, default=min_param_date,
+                        help="Minimum contract creation date (YYYY-MM-DD)")
+
+    parser.add_argument("--created_license_name", type=str, default=file_name_init_licenses,
+                        help="name file for initial_licenses.csv")
+    
+    parser.add_argument("--changed_license_name", type=str, default=file_name_changed_licenses,
+                        help="name file for licenses_changes.csv")
+    
+    parser.add_argument("--folder_name", type=str, default=folder_name,
+                        help="folder name where csv files will be stored")
+
+    return parser.parse_args()
+
+def generate_data(nb_id: int =nb_id,
+                  nb_modif: int = nb_modif,
+                  rand_seed: int = RANDOM_SEED,
+                  min_param_date: str = min_param_date,
+                  file_name_init_licenses: str = file_name_init_licenses,
+                  file_name_changed_licenses: str = file_name_changed_licenses,
+                  folder_name: str = folder_name):
+    np.random.seed(rand_seed)
+
+    # buiding csv 1: initial_licenses.csv
     license_id = np.arange(1, nb_id+1)
     start = np.datetime64(min_param_date)
     dates = generate_creation_dates(nb_id, start, q1_ratio=prop_contract_created_Q1)
@@ -66,8 +99,9 @@ if __name__ == '__main__':
         "price": prices, "renewable": np.array(nb_id*[True])}
 
 
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     df = pd.DataFrame(init_licenses)
-    df.to_csv(os.path.join(folder_name, file_name_init_licenses), index=False)
+    df.to_csv(os.path.join(dir_path, folder_name, file_name_init_licenses), index=False)
 
 
     # building csv 2
@@ -107,6 +141,28 @@ if __name__ == '__main__':
     df2 = pd.DataFrame(created_licenses)
     df2.index.name = "id"
 
-    df2.to_csv(os.path.join(folder_name, file_name_changed_licenses), )
+    df2.to_csv(os.path.join(dir_path, folder_name, file_name_changed_licenses), )
 
     print("Data generation completed")
+
+if __name__ == '__main__':
+    # ex usage : python main_data_generation.py --nb_id 500 --nb_modif 20000 --min_param_date 2022-06-01
+    args = parse_args()
+
+    # extracting info
+    nb_id = args.nb_id
+    nb_modif = args.nb_modif
+    rand_seed = args.rand_seed
+    min_param_date = args.min_param_date
+    file_name_init_licenses = args.created_license_name
+    file_name_changed_licenses = args.changed_license_name
+    folder_name = args.folder_name
+
+    generate_data(nb_id,
+                  nb_modif,
+                  rand_seed,
+                  min_param_date,
+                  file_name_init_licenses,
+                  file_name_changed_licenses,
+                  folder_name)
+   

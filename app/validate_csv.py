@@ -4,13 +4,7 @@ import pandas as pd
 import logging
 import os
 
-# logging configuration
 
-logging.basicConfig(
-    filename="validation.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 # rules
 def rule_creation_date(merged):
@@ -34,8 +28,14 @@ def rule_prices(x):
     return (x["price"] >= 0) & (x["price"] <= 5000)
 
 def main(file_name_init_licenses: str, file_name_changed_licenses: str, folder_name:str = "csv"):
-
+    # logging configuration
     dir_path = os.path.dirname(os.path.realpath(__file__))
+    logging.basicConfig(
+        filename=os.path.join(dir_path, "csv", "validation.log"),
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
     created_csv = pd.read_csv(os.path.join(dir_path, folder_name, file_name_init_licenses), index_col=False, header=0)
     changed_csv = pd.read_csv(os.path.join(dir_path, folder_name, file_name_changed_licenses), index_col=False, header=0)
 
@@ -66,7 +66,6 @@ def main(file_name_init_licenses: str, file_name_changed_licenses: str, folder_n
     for rule_name, (rule, args) in ruleset.items():
 
         result = rule(*args)
-        
         logging_df[f"{rule_name}_valid"] = result
         logging_df["is_valid"] &= result
         
@@ -85,7 +84,7 @@ def main(file_name_init_licenses: str, file_name_changed_licenses: str, folder_n
             # columns level checks
             if result:
                 logging.warning(
-                    f"More unique IDs ({logging_df['id'].nunique()}) than customers ({logging_df['customer'].nunique()})"
+                    f"Rule '{rule_name}' failed)"
                 )
             else:
                 

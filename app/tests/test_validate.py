@@ -59,14 +59,9 @@ class TestRules:
 class TestMain:
     # test validate main script
     @pytest.fixture
-    def csv_files(tmp_path):
-        folder = os.path.join(tmp_path, "csv")
-        folder.mkdir()
-
-        init_file = folder / "init.csv"
-        changed_file = folder / "changed.csv"
-
-        init_df = pd.DataFrame({
+    def mock_csv(self, monkeypatch):
+        # mocking pandas read_csv
+        created_df = pd.DataFrame({
             "id": [1, 2],
             "renew": [True, True],
             "customer": ["A", "B"]
@@ -78,10 +73,16 @@ class TestMain:
             "price": [10, 20]
         })
 
-        init_df.to_csv(init_file, index=False)
-        changed_df.to_csv(changed_file, index=False)
+        def fake_read_csv(path, *args, **kwargs):
+            if "init" in path:
+                return created_df
+            if "changed" in path:
+                return changed_df
+            raise ValueError(f"Unexpected file: {path}")
 
-        return init_file.name, changed_file.name, folder.name
+        monkeypatch.setattr(pd, "read_csv", fake_read_csv)
+
+        return created_df, changed_df
 
     def setup_method(self):
         """Runs before each test"""
@@ -92,22 +93,21 @@ class TestMain:
         monkeypatch.setattr(m.logging, "info", self.mock_info)
         monkeypatch.setattr(m.logging, "warning", self.mock_warning)
     
-    def test_row_level_failure(self, monkeypatch, csv_files):
-        init_name, changed_name, folder = csv_files
+    def test_01_row_level_failure(self, monkeypatch, mock_csv):
 
         self.patch_logging(monkeypatch)
 
+        # mocking rule functions
         monkeypatch.setattr(
             m,
             "rule_creation_date",
             lambda *a: pd.Series([True, False])
         )
-
         monkeypatch.setattr(m, "rule_non_duplicate_id", lambda *a: True)
-        monkeypatch.setattr(m, "rule_id_exist", lambda *a: True)
+        monkeypatch.setattr(m, "rule_id_exist", lambda *a: pd.Series(4*[True]))
         monkeypatch.setattr(m, "rule_type_ok", lambda *a: True)
-        monkeypatch.setattr(m, "rule_prices", lambda *a: True)
+        monkeypatch.setattr(m, "rule_prices", lambda *a: False)
 
-        m.main(init_name, changed_name, folder)
+        m.main("init.csv", "changed.csv", "csv")
 
         self.mock_warning.assert_called()
