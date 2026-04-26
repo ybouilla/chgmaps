@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 import os
-from logger import logger
+from app.config import PROJECT_ROOT
+from app.logger import logger
 import csv
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-STATE_FILE = os.path.join(dir_path, "..", "states", "state.csv")
+dir_path = PROJECT_ROOT
+STATE_FILE = os.path.join(dir_path, "states", "state.csv")
 EPOCH_UTC = datetime(1970, 1, 1, tzinfo=timezone.utc)
 # ----------------------------
 # Helpers
@@ -19,6 +20,7 @@ def format_ts(dt: datetime) -> str:
 
 # ----------------------------
 # State (checkpoint)
+# checkpoint facility to save when last execution has been performed
 # ----------------------------
 def load_checkpoint():
     if not os.path.exists(STATE_FILE):

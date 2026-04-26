@@ -3,10 +3,13 @@ import sys
 import os
 import pytest
 import pandas as pd
+import numpy as np
 
 from app.transformation import load_data, transform_pipeline
 
 # uv run python -m app.main_data_generation --nb_id 10 --nb_modif 500 --rand_seed 0101 --created_license_name test_initial_licenses.csv --changed_license_name test_chg_license.csv --folder_name tests/test_csv
+
+N_LICENSES = 10  # change me if new dataset has been generated with different values for nb_id
 
 class TestPipeline:
     @pytest.fixture(autouse=True)
@@ -36,15 +39,16 @@ class TestPipeline:
         output_file=self.transformed_data
         created_csv, changed_csv = load_data(folder_name, init_file, changed_file)
         trsf_data = transform_pipeline(created_csv, changed_csv)
+        trsf_data.to_csv(output_file, index=False)
         # Assert file was created
-        # assert os.path.exists(self.transformed_data)
+        assert os.path.exists(self.transformed_data)
 
         # # Assert it's not empty
-        # assert os.path.getsize(self.transformed_data) > 0
+        assert os.path.getsize(self.transformed_data) > 0
 
         # check data transformed_data file integrity
 
-        # trsf_data = pd.read_csv(self.transformed_data, index_col=False)
+        
         _expected_columns = set(("date", "type", "active_license_count", "active_license_price", "inactive_license_count",
                    "daily_active_diff", "daily_price_diff", "daily_inactive_diff",))
         
@@ -59,3 +63,5 @@ class TestPipeline:
 
         # check active_license_price = active_license_count * price
         assert (trsf_data["active_license_price"] == trsf_data["active_license_count"] * trsf_data["type"].map(self.prices)).all()
+
+        assert np.abs(trsf_data.groupby("date")[["active_license_count", "inactive_license_count"]].sum().tail(1).values[0].sum()) - N_LICENSES < 0.1

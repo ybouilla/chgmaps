@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 
+from app.config import PROJECT_ROOT
 from app.utils.markov_chain import simulate_markov_single
 from app.utils.data_generation import generate_creation_dates, generate_pareto, generate_type_licenses, generate_dates
 
@@ -83,6 +84,7 @@ def generate_data(nb_id: int =nb_id,
                   file_name_init_licenses: str = file_name_init_licenses,
                   file_name_changed_licenses: str = file_name_changed_licenses,
                   folder_name: str = folder_name):
+    
     np.random.seed(rand_seed)
 
     # buiding csv 1: initial_licenses.csv
@@ -99,12 +101,12 @@ def generate_data(nb_id: int =nb_id,
         "price": prices, "renewable": np.array(nb_id*[True])}
 
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = PROJECT_ROOT
     df = pd.DataFrame(init_licenses)
     df.to_csv(os.path.join(dir_path, folder_name, file_name_init_licenses), index=False)
 
 
-    # building csv 2
+    # building csv 2: license_changes.csv
     # date
 
     license_changed = generate_pareto(license_id, total_size=nb_modif, alpha=2.1)

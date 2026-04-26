@@ -1,13 +1,28 @@
 
 # Exercise Chargemaps
+
+## 📦  Project Overview
+
+This project simulates a full data lifecycle pipeline:
+
+- Synthetic data generation (license subscriptions)
+- Data validation
+- Data transformation (Python + SQL)
+- Storage in SQLite database
+- Incremental pipeline processing
+- Full Docker-based orchestration
+- Automated testing suite (pytest)
+
+
 ## 0. Installation 
 
 **Requirements**:
 - Linux OS 
 - Windows with WSL2 (Windows Subsystem Linux) activated
+- Docker
 
 ### Using uv as a package manager
-*Nota*: Uv has been selected here for its known efficiency. Other python package manager should be working but have not been tested.
+*Nota*: [uv](https://github.com/astral-sh/uv) has been selected here for its known efficiency. Other python package manager should be working but have not been tested.
 
 First install uv. Then you can install requirements by running:
 **On Linux**:
@@ -16,29 +31,43 @@ source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
-Run the following script: `uv run python -m app.main_data_generation`
+Run the following script: 
+```shell
+uv run python -m app.main_data_generation
+```
 Use `uv run python -m app.main_data_generation --help` for more details.
 
+## 1. Data Generation
 ## Parameters
 Parameters are defined in the script `main_data_generation.py`
 
-### Number of licenses per clients
-As asked, a paretto distribution is used to model number of licenses per clients.
+### a. Number of Licenses
 
-### Changes in the licenses.
+Since the license ids range from 1 to 100, there are a maximum of 100 licenses.
+For customer ids, there should be less customers than the number of licenses available. 
 
-To simulate the fact most clients don't change their subscriptions, but only a small portion do, i used a Paretto like distribution.
+### b. Number of licenses per clients
+As asked, a paretto distribution is used to model number of licenses per clients. `alpha` has been selected in a way the majority of clients have one or 2 licenses, but a few of them hold way more licenses.
 
-### **relationship between type and prices:**
+### c. Creation date
 
-Since we have 3 kinds of type (SIM, PASS, SUPERVISION), I proposed to map for each type a price:
+To generate creation date; we used a probability to create a date belonging to first quarter of the year. Also we include the fact the date doesnot appear on a weekend (assuming its mainly companies which subscribe).
+
+### d. Changes in the licenses.
+
+To simulate the fact most clients don't change their subscriptions, but only a small portion do, i used a Paretto like distribution, to selectt which clients will have a lot of modifications.
+It has been asked to generate over than 10,000 modifications. 
+
+### e. **Relationship between type and prices:**
+
+Since we have 3 kinds of type (SIM, PASS, SUPERVISION), for simplification sake I proposed to map for each type a price:
  - PASS: 100
  - SIM: 1000
  - SUPERVISION: 5000
 
-###  type modelling
+###  f.type modelling
 
-I used a Markov Chain to represent the transition dynamics. I defined a 6 transition matrix where each row represents probabilities of moving between states.
+I used a Markov Chain to represent the transition dynamics. I defined a 6-state system represented by a single 6×6 transition matrix, where each row defines the probabilities of transitioning between states.
 
 🧩 Conceptual model
 
@@ -46,37 +75,40 @@ This system behaves like:
 
 * A 3-state operational process (core system)
 * Embedded in a 6-state Markov chain
-With transient “renewal” events acting as instant resets
+With transient “renewal” events acting as instant switches
+
+
+### g. Renewable:
 💡 Key idea
+Renewal states do not change the observed state, but they represent meaningful internal transitions in the underlying stochastic process.
+Here we assume that when licenses are created, all licenses are renewbale (activated) by default. Then, using the Markov chain, we modelise some states as renewable or not renewable, so the license can be deactivated and then reactivated or changed to another subscription (still staying inactive).
 
-Renewal states do not change the observed business state, but they represent meaningful internal transitions in the underlying stochastic process.
-
-### Renewable:
-
-Here we assume that when licenses are created, all licenses are renewbale (activated) by default.
-
-### **Possible improvments:**
+### h. **Possible improvments:**
 I am keeping things simple here; but we may consider lower price for customers who has several licenses (like discounts): the more customers has license, the more they get some discount from the inital price. Also the longer they have subscribed, the more discount they can get. 
 
 Ideas for even more realistic data:
-- discount on nb of years customers have been subscribing (renew=True)
+- discount on number of years customers have been subscribing (renew=True)
 - discount on number of license customers are currently subscribing (renew=True)
 
-## 1. Data Generation
+We can also consider that some licenses could be shared amongst clients. 
+
+
 ## 2.1 Validation step
 
 ### Validation script
 
 To run validation script; enter in a terminal
 
-`uv run python app/validation.py`.
+```shell
+uv run python -m app.validate_csv
+```
 Output logs are located in the `app/csv` folder.
 
 ## 2.2 Transformation step
 
 ### Transformation with python/pandas
 To run transformation, enter in a terminal
-`uv run python app/transformation.py`
+`uv run python -m app.transformation`
 
 The script requieres both csv files `initial_licenses.csv`and `license_changes.csv` in `csv`folder
 It outputs `transformed.csv` in the `csv` folder.
@@ -94,22 +126,27 @@ Process:
 Please see answer in the file named : `app/sql/req.sql`
 **Regarding question about database architecture.**
 First, regarding the database creation, it could be nice to inculde a foreign key referring to initial_licenses 's `id`. 
-Second; The script made to perform transform is too big: one could consider create all the intermediate table 
-where i had to use CTE. 
+Second; the transformation script is overly large and complex. It could be improved by splitting it into modular steps and using intermediate tables/views instead of relying heavily on Common Table Expressions (CTEs).
 
-## 3. Industrialisation and testing steps : Docker and Test
+## 3. Industrialisation and testing steps : Docker and Tests
 
 ### Industrialisation through Docker
 
 **Please visit docker installation beforehand:
-- [docker installation for linux]()
-- [docker installation for windows and wsl2]()
+- [docker installation for linux](https://docs.docker.com/engine/install/)
+- [docker installation for windows and wsl2](https://docs.docker.com/desktop/features/wsl/)
 
 To use the pipeline within docker, run this command: 
-First build, using `docker build -t pipeline .`
-Second, run docker using `docker run -v $(pwd)/app/mnt:/app/app/csv -it pipeline `
+First build, using 
+```shell
+docker build -t pipeline .
+```
+Second, run docker using 
+```shell
+docker run -v $(pwd)/app/mnt:/app/app/csv -it pipeline 
+```
 
-Data and logs can be accessed using mounted folder: `app\mnt`
+Data and logs can be accessed using mounted folder: `app/mnt`
 An entrypoint file has been made in order to execute the different element of the pipeline, ie:
 - sql database (made using SQlite)
 - data generation
@@ -121,12 +158,11 @@ An entrypoint file has been made in order to execute the different element of th
 
 ### Tests (pytest)
 To run the test, kindly execute from a terminal:
-`uv run pytest app/tests`
+`uv run pytest -v app/tests`
 
-To test through docker; one can use:
+To launch test suit through docker; one can use:
 ```shell
-export MODE=test
-docker run -v $(pwd)/app/mnt:/app/app/csv -it pipeline 
+docker run -e MODE=test -it pipeline 
 ```
 **Test structure**:
 Several tests are provided:
@@ -136,14 +172,19 @@ Several tests are provided:
 
 
 ### Question CI/CD:
-
 In order to execute CI using a tool like Github action:
-1. define OS to run on the pipeline (eg ubuntu)
-2. load the packages needed
-3. run all the tests
-4. test the pipeline through docker
-5. test the documentation
-5. define the workflows file, ie which actions trigger when CI runs (each push request, when pushing on master branch, when releasing)
+1. Continuous Integration (CI)
+* Define the OS environment (e.g., Ubuntu)
+* Install dependencies using uv
+* Run code quality checks (linting, formatting, optional type checking)
+* Run and check the documentation generation
+* Execute unit, integration,  consistency and end2end tests 
+* Validate the full pipeline execution using Docker to ensure reproducibility
+* define the workflows configuration file, ie which actions trigger when CI runs (each push request, when pushing on master branch, when releasing)
+
+2. Continuous Delivery / Deployment (CD)
+* Build a Docker image of the pipeline
+* Deploy or execute the pipeline 
 
 ## 4. Pipeline
 
@@ -165,16 +206,21 @@ This approach ensures I don’t miss late data while keeping the pipeline effici
 
 For simplicity sake; i will save states in a csv file `states/state.csv`, but this would be not suitable for production.
 To run the incremental pipeline, enter:
-`run uv run app/incremental_pipeline.py `
+`run uv run python -m app.incremental_pipeline `
 
 In the code, pipeline 's lookback is set using `LOOKBACK_MINUTES`. Since we want to process striclty only new incoming data, I will set `LOOKBACK_MINUTES=0` (ie deactivated), but this is risky especially if data arrive late.  one should set it to a small window (eg 30 minutes).
+A lookback window is used: `last_processed_date - window`
 
 There is an option to run backfill pipeline:
-`uv run app/incremental_pipeline.py --mode backfill`
+```shell
+uv run python -m app.incremental_pipeline --mode backfill
+```
 Backfill strategy should be run from time to time, to ensure there are no very late batches of data (see 4.3 Edge case management).
 
 For further information, type to display help message:
-`uv run app/incremental_pipeline.py --help`
+```shell
+uv run python -m app.incremental_pipeline --help
+```
 
 
 ### 4.3 Edge cases management

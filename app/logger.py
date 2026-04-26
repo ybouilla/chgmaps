@@ -2,16 +2,18 @@
 import logging
 import os
 
+from app.config import PROJECT_ROOT
+
 # ----------------------------
 # Logging setup
 # ----------------------------
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = PROJECT_ROOT
 
 import logging
 import os
 
 DEFAULT_LOGGING_PATH = "validation.log"
-dir_path = os.path.dirname(__file__)  # or wherever you want
+
 
 logger = logging.getLogger("my_app")
 logger.setLevel(logging.INFO)

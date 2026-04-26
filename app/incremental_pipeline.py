@@ -3,12 +3,13 @@ import csv
 import os
 
 import pandas as pd
-from transformation import transform_pipeline
-from logger import  set_logging, logger
+from app.config import PROJECT_ROOT
+from app.transformation import transform_pipeline
+from app.logger import  set_logging, logger
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
-from incremental_pipeline_tools.state_manager import parse_ts, load_checkpoint, save_checkpoint
+from app.incremental_pipeline_tools.state_manager import parse_ts, load_checkpoint, save_checkpoint
 
 
 # ----------------------------
@@ -21,30 +22,36 @@ LOOKBACK_MINUTES = 0  # lookback
 N_BATCH = 10  # number of batches
 MAX_RETRIES = 3  # number of retries to process when a batch of data fails
 
-# ----------------------------
-# Mock source
-# ----------------------------
-def mock_fetch_source_data(start_ts: datetime, end_ts: datetime, **args) -> List[Dict]:
-    logger.info(f"Fetching data from {start_ts} to {end_ts}")
-
-    mock_data = [
-        {"id": 1, "value": "A", "date": "2026-04-25T10:00:00"},
-        {"id": 2, "value": "B", "date": "2026-04-25T10:30:00"},
-        {"id": 3, "value": "C", "date": "2026-04-25T10:45:00"},
-        {"id": 1, "value": "A_updated", "date": "2026-04-25T11:00:00"},
-    ]
-
-    data = [
-        r for r in mock_data
-        if start_ts <= parse_ts(r["date"]) <= end_ts
-    ]
-
-    logger.info(f"Fetched {len(data)} records")
-    return data
 
 
 def fetch_source_data(start_ts: datetime, end_ts: datetime, init_file: str,
-                      changed_file: str, folder_name: str) -> List[Dict]:
+                      changed_file: str, folder_name: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Load and filter source datasets within a given time window.
+
+    This function reads raw CSV files, converts timestamp columns to UTC timezone,
+    and filters records based on the provided start and end timestamps.
+
+    Parameters
+    ----------
+    start_ts : datetime
+        Start of the extraction window (inclusive).
+    end_ts : datetime
+        End of the extraction window (inclusive).
+    init_file : str
+        Filename of the initial dataset.
+    changed_file : str
+        Filename of the change events dataset.
+    folder_name : str
+        Directory containing input files.
+
+    Returns
+    -------
+    created_csv : pd.DataFrame
+        Filtered initial dataset within the time window.
+    changed_csv : pd.DataFrame
+        Filtered change events dataset within the time window.
+    """
     logger.info(f"Fetching data from {start_ts} to {end_ts}")
         
 
@@ -72,7 +79,29 @@ def fetch_source_data(start_ts: datetime, end_ts: datetime, init_file: str,
 # ----------------------------
 # Target store (idempotent)
 # ----------------------------
-def load_target(folder_name: str, output_file: str, variables:List[str], date_entry: str) -> pd.DataFrame:
+def load_target(folder_name: str, output_file: str, variables: List[str], date_entry: str) -> pd.DataFrame:
+    """
+    Load the target dataset from storage with optional initialization.
+
+    If the target file does not exist, an empty DataFrame with the
+    expected schema is returned.
+
+    Parameters
+    ----------
+    folder_name : str
+        Directory containing output files.
+    output_file : str
+        Name of the target file.
+    variables : List[str]
+        Expected column names for the dataset schema.
+    date_entry : str
+        Column name containing datetime values.
+
+    Returns
+    -------
+    pd.DataFrame
+        Loaded target dataset with parsed datetime column.
+    """
     folder = os.path.join(folder_name, output_file)
     if not os.path.exists(folder):
         return pd.DataFrame(columns=variables)
@@ -83,12 +112,42 @@ def load_target(folder_name: str, output_file: str, variables:List[str], date_en
 
 
 def save_target(df: pd.DataFrame, output_file: str, folder_name: str):
-    print("data saved", df)
+    """
+    Persist the target dataset to disk as a CSV file.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataset to save.
+    output_file : str
+        Output filename.
+    folder_name : str
+        Directory where file is saved.
+    """
+    #print("data saved", df)
 
     df.to_csv(os.path.join(folder_name, output_file), index=False)
 
 
 def upsert_batch(records: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
+    """
+    Perform an idempotent upsert of incoming batch into target dataset.
+
+    New records are merged with existing data, and duplicates are removed
+    based on the `id` column, keeping the latest occurrence.
+
+    Parameters
+    ----------
+    records : pd.DataFrame
+        Incoming batch of records.
+    target : pd.DataFrame
+        Existing dataset.
+
+    Returns
+    -------
+    pd.DataFrame
+        Updated dataset after upsert operation.
+    """
     if len(records) == 0:
         return target
 
@@ -106,7 +165,22 @@ def upsert_batch(records: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
 # ----------------------------
 # Batch helper
 # ----------------------------
-def chunk(data: List[Dict], size: int):
+def chunk(data: pd.DataFrame, size: int) -> list:
+    """
+    Split a dataset into fixed-size batches.
+
+    Parameters
+    ----------
+    data : List[Dict]
+        Input dataset.
+    size : int
+        Batch size.
+
+    Returns
+    -------
+    list
+        List of tuples (batch_id, batch_data).
+    """
     return [(i // size, data[i:i + size]) for i in range(0, len(data), size)]
         
 
@@ -115,7 +189,36 @@ def chunk(data: List[Dict], size: int):
 # Retry batch processing
 # ----------------------------
 def process_batch(batch_id: int, batch: pd.DataFrame,
-                  target: pd.DataFrame, output_file: str, folder_name: str, date_str: str ) -> bool:
+                  target: pd.DataFrame, output_file: str,
+                  folder_name: str, date_str: str) -> bool:
+    """
+    Process and persist a single batch with retry logic.
+
+    This function attempts to upsert a batch into the target dataset,
+    saves the result, and retries on failure up to MAX_RETRIES.
+
+    Parameters
+    ----------
+    batch_id : int
+        Identifier of the batch.
+    batch : pd.DataFrame
+        Incoming batch data.
+    target : pd.DataFrame
+        Current target dataset.
+    output_file : str
+        Output file name.
+    folder_name : str
+        Output directory.
+    date_str : str
+        Column used for sorting timestamps.
+
+    Returns
+    -------
+    success : bool
+        Whether the batch was processed successfully.
+    target : pd.DataFrame
+        Updated target dataset.
+    """
     for attempt in range(1, MAX_RETRIES + 1):
         try:
 
@@ -140,6 +243,32 @@ def process_batch(batch_id: int, batch: pd.DataFrame,
 def run_backfill_pipeline(inital_license_file: str, changed_license_file: str,
                           output_init_license: str, output_changed_license: str,
                           folder_name: str, days: int=5, ):
+
+    """
+    Execute a backfill pipeline for late-arriving data.
+
+    This function computes a lookback window and reprocesses recent data
+    to ensure consistency in the target datasets.
+
+    Parameters
+    ----------
+    inital_license_file : str
+        Input file for initial licenses.
+    changed_license_file : str
+        Input file for change events.
+    output_init_license : str
+        Output file for initial dataset.
+    output_changed_license : str
+        Output file for changed dataset.
+    folder_name : str
+        Directory containing input/output files.
+    days : int, optional
+        Number of days to backfill (default is 5).
+
+    Returns
+    -------
+    None
+    """
     """Runs backfill for data coming very late"""
     now = datetime.now(timezone.utc)
 
@@ -159,6 +288,40 @@ def run_backfill_pipeline(inital_license_file: str, changed_license_file: str,
 def run_pipeline(start: str, end: str, inital_license_file: str,
                  changed_license_file: str, created_output_file: str,
                  changed_output_file: str, folder_name: str) : 
+
+    """
+    Execute the full incremental ingestion pipeline.
+
+    This pipeline:
+    1. Loads checkpoint state (watermarks)
+    2. Defines processing window
+    3. Fetches source data
+    4. Loads target datasets
+    5. Processes data in batches with retries
+    6. Updates watermarks
+    7. Persists final checkpoint
+
+    Parameters
+    ----------
+    start : str
+        Start timestamp (or None to use watermark).
+    end : str
+        End timestamp (or None for current time).
+    inital_license_file : str
+        Input file for initial licenses.
+    changed_license_file : str
+        Input file for changed licenses.
+    created_output_file : str
+        Output file for initial dataset.
+    changed_output_file : str
+        Output file for changed dataset.
+    folder_name : str
+        Directory for all input/output files.
+
+    Returns
+    -------
+    None
+    """
     logger.info("PIPELINE START")
 
     # ----------------------------
@@ -260,7 +423,7 @@ if __name__ == "__main__":
     initial_license_file = "initial_licenses.csv"
     licence_changed_file = "license_changes.csv"
     folder_name = "csv"
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = PROJECT_ROOT
     folder_name = os.path.join(dir_path, folder_name)
     
     set_logging("incremental.log")
@@ -273,16 +436,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.mode == "incremental":
+        run_pipeline(None, None, initial_license_file,
+                     licence_changed_file, "target_init_license.csv", "target_chgs.csv", folder_name)
+        
 
+    elif args.mode == "backfill":
+        run_backfill_pipeline(initial_license_file, licence_changed_file,
+                              "target_init_license.csv", "target_chgs.csv",
+                               folder_name, days=args.days)
+        
+    elif args.mode == "test_incremental":
+        #########################################
+        # this section is reserved for testing
         start, end = "2023-04-25T10:00:00", "2023-04-30T10:10:00"
-        run_pipeline(start, end, initial_license_file, licence_changed_file, "target1.csv", "target2.csv", folder_name)
+        run_pipeline(start, end, initial_license_file,
+                     licence_changed_file, "target_init_license.csv", "target_chgs.csv", folder_name)
 
         start, end = "2023-04-25T10:00:00", "2023-05-10T10:10:00"
         run_pipeline(start, end, initial_license_file, licence_changed_file, "target1.csv", "target2.csv", folder_name)
         chck = pd.read_csv("target2.csv", index_col=False)
         assert len(chck["id"]) == len(chck["id"].unique())
-
-    elif args.mode == "backfill":
-        run_backfill_pipeline(initial_license_file, licence_changed_file, "target1.csv", "target2.csv", folder_name, days=args.days)
     
     

@@ -4,6 +4,8 @@ import pandas as pd
 import logging
 import os
 
+from app.config import PROJECT_ROOT
+
 
 
 # rules
@@ -29,7 +31,7 @@ def rule_prices(x):
 
 def main(file_name_init_licenses: str, file_name_changed_licenses: str, folder_name:str = "csv"):
     # logging configuration
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = PROJECT_ROOT
     logging.basicConfig(
         filename=os.path.join(dir_path, "csv", "validation.log"),
         level=logging.INFO,

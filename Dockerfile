@@ -17,9 +17,9 @@ COPY app/ /app/app
 # Optional data dir
 RUN mkdir -p /app/data
 
-
+# default to pipeline
 ENV MODE=pipeline
-
+ENV PYTHONPATH=/app
 # Copy entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

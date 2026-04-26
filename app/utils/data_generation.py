@@ -304,7 +304,6 @@ def generate_dates(start_date, n_dates: int):
     if isinstance(start_date, str):
         start_date = datetime.fromisoformat(start_date)
     
-    now = datetime.now()
     
     start = np.datetime64(start_date, 'D')
     today = np.datetime64('today', 'D')
@@ -322,4 +321,3 @@ def generate_dates(start_date, n_dates: int):
     # Convert back to datetime64[D]
     return random_days.astype('datetime64[D]')
     
-mapping_reverse = {"PASS": 100, "SIM": 1000, "SUPERVISION": 5000}

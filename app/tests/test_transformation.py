@@ -70,12 +70,13 @@ class TestPipeline:
         daily_states = pd.DataFrame({
             "date": pd.to_datetime(["2024-01-01", "2024-01-02"]),
             "type": ["A", "A"],
+            "license_id": [1, 1],
             "renewable": [True, False]
         })
 
         all_dates = pd.to_datetime(["2024-01-01", "2024-01-02"])
 
-        result = m.compute_counts(daily_states, created_csv, all_dates)
+        result = m.compute_counts(daily_states,  all_dates)
 
         # basic sanity checks
         assert isinstance(result, pd.DataFrame)
@@ -138,3 +139,48 @@ class TestPipeline:
         actual = dict(zip(result["date"], result["active_license_price"]))
 
         assert actual == expected
+
+    def test_07_license_becomes_inactive(self):
+
+        daily_states = pd.DataFrame({
+            "date": pd.to_datetime([
+                "2023-01-08",
+                "2023-01-09",
+                "2023-01-09"
+            ]),
+            "type": ["PASS", "PASS", "PASS"],
+            "license_id": [1, 1, 1],
+            "renewable": [True, True, False],  # becomes inactive on day 2
+        })
+
+
+
+        all_dates = pd.to_datetime([
+            "2023-01-08",
+            "2023-01-09",
+        ])
+
+        # -------------------------
+        # 2. Run function
+        # -------------------------
+        df = m.compute_counts(daily_states, all_dates)
+
+        # -------------------------
+        # 3. Assertions
+        # -------------------------
+        df_pass = df[df["type"] == "PASS"].sort_values("date")
+
+        # Day 1 → active = 1, inactive = 0
+        assert df_pass.iloc[0]["active_license_count"] == 1
+        assert df_pass.iloc[0]["inactive_license_count"] == 0
+
+        # Day 2 → active = 0, inactive = 1 
+        assert df_pass.iloc[1]["active_license_count"] == 0
+        assert df_pass.iloc[1]["inactive_license_count"] == 1
+
+        # Total should always be 1
+        total = (
+            df_pass["active_license_count"]
+            + df_pass["inactive_license_count"]
+        )
+        assert all(total == 1)
