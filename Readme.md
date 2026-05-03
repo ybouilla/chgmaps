@@ -22,7 +22,7 @@ This project simulates a full data lifecycle pipeline:
 - Docker
 
 ### Using uv as a package manager
-*Nota*: [uv](https://github.com/astral-sh/uv) has been selected here for its known efficiency. Other python package manager should be working but have not been tested.
+*Nota*: [uv](https://github.com/astral-sh/uv) has been selected here for its known efficiency. Others python package managers should be working but have not been tested.
 
 First install uv. Then you can install requirements by running:
 **On Linux**:
@@ -55,7 +55,7 @@ To generate creation date; we used a probability to create a date belonging to f
 
 ### d. Changes in the licenses.
 
-To simulate the fact most clients don't change their subscriptions, but only a small portion do, i used a Paretto like distribution, to selectt which clients will have a lot of modifications.
+To simulate the fact most clients don't change their subscriptions, but only a small portion do, i used a Paretto like distribution, to select which clients will have a lot of modifications.
 It has been asked to generate over than 10,000 modifications. 
 
 ### e. **Relationship between type and prices:**
@@ -84,7 +84,7 @@ Renewal states do not change the observed state, but they represent meaningful i
 Here we assume that when licenses are created, all licenses are renewbale (activated) by default. Then, using the Markov chain, we modelise some states as renewable or not renewable, so the license can be deactivated and then reactivated or changed to another subscription (still staying inactive).
 
 ### h. **Possible improvments:**
-I am keeping things simple here; but we may consider lower price for customers who has several licenses (like discounts): the more customers has license, the more they get some discount from the inital price. Also the longer they have subscribed, the more discount they can get. 
+I am keeping things simple here; but we may consider lower price for customers who has several licenses (like discounts): the more customers have licenses, the more they get some discount from the inital price. Also the longer they have subscribed, the more discount they can get. 
 
 Ideas for even more realistic data:
 - discount on number of years customers have been subscribing (renew=True)
@@ -113,6 +113,19 @@ To run transformation, enter in a terminal
 The script requieres both csv files `initial_licenses.csv`and `license_changes.csv` in `csv`folder
 It outputs `transformed.csv` in the `csv` folder.
 
+**Details**:
+
+1. **build states** =(concatentaion of init and changed states):
+    - cleans created and changed csv data: **noramlizes data**: having the same columns named the same way accross initial and changed, takes only last changed value in `changed_clean`
+    - creates `initial_states`, first by considering only created. Its  index is using ["license_id", "date"] 
+    - states are a concatenation of clean created and clean changed. I added id=-1 if there are creation but no changes in the states
+
+
+2. **build_full_daily_states**:
+     - creates all_dates: date from min(date) and max(date), and `full_grid` a grid date * licenses. Then performs a left join on creation_date so we have date, license_id and creation_date. we also make sure that dates are after creation_date.
+    - then do left join on full_grid and states on [license_id, date]
+    - group by ["renewable", "type", "price"], so we have for each entry its type/renewable and associated price
+    - returns a df with all dates, license_id and its corresponding [ "type"]
 ### Storage in SQL database:
 For database usage, we are going to use SQlite as a sql database in the docker image. The idea is to keep docker image as small as possible.
 
@@ -122,7 +135,7 @@ Process:
 - The python script `app/add_database.py` can be used to load data generated from the csv files inside databases.
 - `req.sql` is used to mimick the behaviour of transformation.py but whithin the docker file. 
 
-### Transformation with SQL request
+### Transformation with SQL queries
 Please see answer in the file named : `app/sql/req.sql`
 **Regarding question about database architecture.**
 First, regarding the database creation, it could be nice to inculde a foreign key referring to initial_licenses 's `id`. 
@@ -192,7 +205,7 @@ In order to execute CI using a tool like Github action:
 
 Regarding data that has been already processed: I would implement an incremental pipeline using a checkpoint (high-water mark / date of new incoming batch of data), typically based on a timestamp like updated_at or an ingestion time.
 
-To handle late-arriving data, I would use a lookback window: each run would reprocess data from last_processed_timestamp - window, ensuring that delayed records are still captured.,  so I am sure I won't miss any data, even if I have to re process  data records that I have already processed. I could define a watermark or delay threshold to indicate when data is considered complete (which can better scale to continuous data processing)
+To handle late-arriving data, I would use a lookback window: each run would reprocess data from last_processed_timestamp - window, ensuring that delayed records are still captured,  so I am sure I won't miss any data, even if I have to re process  data records that I have already processed. I could define a watermark or delay threshold to indicate when data is considered complete (which can better scale to continuous data processing)
 
 
 I would persist this state in a durable store such as a database table. That way, I can keep track of incoming data, and see which data has been processed and which has been newly added.

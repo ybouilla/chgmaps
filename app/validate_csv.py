@@ -1,7 +1,7 @@
 from typing import Iterable
 
 import pandas as pd
-import logging
+from app.logger import logger
 import os
 
 from app.config import PROJECT_ROOT
@@ -30,13 +30,9 @@ def rule_prices(x):
     return (x["price"] >= 0) & (x["price"] <= 5000)
 
 def main(file_name_init_licenses: str, file_name_changed_licenses: str, folder_name:str = "csv"):
-    # logging configuration
+    # logging configuration 
     dir_path = PROJECT_ROOT
-    logging.basicConfig(
-        filename=os.path.join(dir_path, "csv", "validation.log"),
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+
 
     created_csv = pd.read_csv(os.path.join(dir_path, folder_name, file_name_init_licenses), index_col=False, header=0)
     changed_csv = pd.read_csv(os.path.join(dir_path, folder_name, file_name_changed_licenses), index_col=False, header=0)
