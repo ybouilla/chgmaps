@@ -1,0 +1,52 @@
+==================== 2026-06-16T21:49:34.962603Z | 019ed269-4568-7b70-84ff-41dab888fced ====================
+21:49:34.970644 [info ]: Installing dbt project and profile setup
+21:49:34.997451 [info ]: Info Created .vscode/extensions.json with dbt extension recommendation
+21:49:35.000983 [info ]: Success Project created successfully!
+21:49:35.002568 [info ]: Info Project name: jaffle_shop
+21:49:35.003108 [info ]: Info Project directory: jaffle_shop
+21:49:35.003827 [info ]: Info Setting up your profile...
+21:49:35.007852 [info ]: Info Creating new profile...
+21:49:45.713337 [info ]: No dbt_cloud.yml found - proceeding without cloud pre-population
+21:49:49.336378 [error]: [IoError (dbt1001)]: Failed to get input for host: IO error: read interrupted
+21:49:49.380194 [info ]: 
+==================== Execution Summary =====================
+Finished 'init' with 1 error [14.4s]
+[0m23:56:02.736451 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f638111b530>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f638140cce0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f63803fb590>]}
+
+
+============================== 23:56:02.842577 | c793e4d9-ef78-4b27-9603-ec013c41f24c ==============================
+[0m23:56:02.842577 [info ] [MainThread]: Running with dbt=1.11.11
+[0m23:56:02.843304 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'use_experimental_parser': 'False', 'version_check': 'True', 'warn_error': 'None', 'quiet': 'False', 'log_format': 'default', 'empty': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'log_path': 'logs', 'debug': 'False', 'no_print': 'None', 'introspect': 'True', 'profiles_dir': '/home/user/.dbt', 'cache_selected_only': 'False', 'send_anonymous_usage_stats': 'True', 'log_cache_events': 'False', 'target_path': 'None', 'indirect_selection': 'eager', 'partial_parse': 'True', 'invocation_command': 'dbt debug', 'static_parser': 'True', 'use_colors': 'True', 'write_json': 'True', 'fail_fast': 'False'}
+[0m23:56:02.925013 [info ] [MainThread]: dbt version: 1.11.11
+[0m23:56:02.925710 [info ] [MainThread]: python version: 3.12.9
+[0m23:56:02.926352 [info ] [MainThread]: python path: /home/user/chargemaps/.venv/bin/python3
+[0m23:56:02.926942 [info ] [MainThread]: os info: Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.31
+[0m23:56:02.927537 [info ] [MainThread]: Using profiles dir at /home/user/.dbt
+[0m23:56:02.928037 [info ] [MainThread]: Using profiles.yml file at /home/user/.dbt/profiles.yml
+[0m23:56:02.928596 [info ] [MainThread]: Using dbt_project.yml file at /home/user/chargemaps/models/dbt_project.yml
+[0m23:56:02.929115 [info ] [MainThread]: Configuration:
+[0m23:56:02.929623 [info ] [MainThread]:   profiles.yml file [[31mERROR not found[0m]
+[0m23:56:02.930120 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m23:56:02.930606 [info ] [MainThread]: Required dependencies:
+[0m23:56:02.931121 [debug] [MainThread]: Executing "git --help"
+[0m23:56:02.933682 [debug] [MainThread]: STDOUT: "b"usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]\n           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone             Clone a repository into a new directory\n   init              Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add               Add file contents to the index\n   mv                Move or rename a file, a directory, or a symlink\n   restore           Restore working tree files\n   rm                Remove files from the working tree and from the index\n   sparse-checkout   Initialize and modify the sparse-checkout\n\nexamine the history and state (see also: git help revisions)\n   bisect            Use binary search to find the commit that introduced a bug\n   diff              Show changes between commits, commit and working tree, etc\n   grep              Print lines matching a pattern\n   log               Show commit logs\n   show              Show various types of objects\n   status            Show the working tree status\n\ngrow, mark and tweak your common history\n   branch            List, create, or delete branches\n   commit            Record changes to the repository\n   merge             Join two or more development histories together\n   rebase            Reapply commits on top of another base tip\n   reset             Reset current HEAD to the specified state\n   switch            Switch branches\n   tag               Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch             Download objects and refs from another repository\n   pull              Fetch from and integrate with another repository or a local branch\n   push              Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m23:56:02.934328 [debug] [MainThread]: STDERR: "b''"
+[0m23:56:02.934752 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m23:56:02.935268 [info ] [MainThread]: Connection test skipped since no profile was found
+[0m23:56:02.935965 [info ] [MainThread]: [31m2 checks failed:[0m
+[0m23:56:02.936444 [info ] [MainThread]: dbt looked for a profiles.yml file in /home/user/.dbt/profiles.yml, but did
+not find one. For more information on configuring your profile, consult the
+documentation:
+
+https://docs.getdbt.com/docs/configure-your-profile
+
+
+[0m23:56:02.936855 [info ] [MainThread]: Project loading failed for the following reason:
+ project path </home/user/chargemaps/models/dbt_project.yml> not found
+
+[0m23:56:02.938376 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_success": false, "command_wall_clock_time": 0.2766154, "process_in_blocks": "50056", "process_kernel_time": 1.302041, "process_mem_max_rss": "128328", "process_out_blocks": "33880", "process_user_time": 4.701263}
+[0m23:56:02.939053 [debug] [MainThread]: Command `dbt debug` failed at 23:56:02.938905 after 0.28 seconds
+[0m23:56:02.939478 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f63803f0a40>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f63831a6e40>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f63813af980>]}
+[0m23:56:02.939906 [debug] [MainThread]: Flushing usage events
+[0m23:56:03.384387 [debug] [MainThread]: An error was encountered while trying to flush usage events

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: inter_licenses_daily_states
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - license_id
+            - date
+
+    columns:
+      - name: license_id
+        tests:
+          - not_null
+
+      - name: date
+        tests:
+          - not_null
+
+      - name: renewable
+        tests:
+          - accepted_values:
+              values: [0, 1]

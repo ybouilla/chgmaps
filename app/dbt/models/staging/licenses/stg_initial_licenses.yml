@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: stg_initial_licenses
+
+    columns:
+      - name: license_id
+        tests:
+          - unique
+          - not_null
+
+      - name: creation_date
+        tests:
+          - not_null
+
+      - name: type
+        tests:
+          - not_null
+    version: 2
+
+
+  - name: stg_license_changes
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - license_id
+            - date
+
+    columns:
+      - name: license_id
+        tests:
+          - not_null
+
+      - name: date
+        tests:
+          - not_null

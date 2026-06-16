@@ -1,5 +1,11 @@
 numpy==2.4.4
 pandas==3.0.2
 pytest==9.0.3
+# dbt
+dbt-core
+dbt-bigquery
+dbt-extractor
+dbt-semantic-interfaces
+dbt-sqlite
 # pandera[pandas]
 # typing-extensions

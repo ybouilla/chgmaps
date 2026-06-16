@@ -136,7 +136,16 @@ Hence, one can run the incremental pipeline every hours, and execute the backfil
 To run the test, kindly execute from a terminal:
 `uv run pytest -v app/tests`
 
-#### 6.2 Tests through docker
+#### 6.2 Tests through dbt
+TO test dbt, run:
+
+```shell
+dbt run  # always perform a dbt run before doing tests
+dbt test
+```
+
+
+#### 6.3 Tests through docker
 To launch test suit through docker; one can use:
 ```shell
 docker run -e MODE=test -it pipeline 
@@ -147,6 +156,78 @@ Several tests are provided:
 - **integration tests**: `test_pipeline.py` executing the whole pipeline
 - **consistency tests**: `test_data_consistency.py`checks if generated data are consistent, data integrity checks
 
+## DBT addition :
+
+### dbt queries strucutre
+```
+models/
+├── staging/
+│   ├── stg_license_changes.sql
+│   └── stg_initial_licenses.sql
+│
+├── intermediate/
+│   ├── int_license_states.sql
+│   ├── int_license_calendar.sql
+│   ├── int_license_daily_states.sql
+│   └── int_license_daily_metrics.sql
+│
+└── marts/
+    └── mart_license_metrics.sql
+```
+
+First, run dbt dependencies
+```shell
+dbt deps
+dbt compile
+
+```
+To see if settings are correct, run to check:
+```shell
+cd app/dbt
+dbt ls
+dbt debug
+```
+
+and then run!
+```shell
+
+dbt run --full-refresh
+```
+**TODO**: add seeding for csv ?
+
+### work in progress
+
+This should be automatized, qnd these scripts sotred in a `helper` folder:
+```shell
+cd app
+python create_db.py  # create db with sql/creqte.sql queries
+python add_database.py --initial-licenses "csv/initial_licenses.csv" --license-changes "csv/license_changes.csv" --db test.db
+``` 
+
+### dbt workflow
+
+```
+license_changes
+        │
+        ▼
+stg_license_changes
+
+initial_licenses
+        │
+        ▼
+stg_initial_licenses
+        │
+        ├─────────────► int_license_states
+        │                     │
+        │                     ▼
+        │             int_license_daily_states
+        │                     │
+        │                     ▼
+        │             int_license_daily_metrics
+        │                     │
+        ▼                     ▼
+     calendar ─────────► mart_license_metrics
+```
 
 ## TODO: 
 1. create CI
