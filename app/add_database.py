@@ -33,6 +33,13 @@ parser.add_argument(
     help="Path to SQLite database (default: data.db)",
 )
 
+
+parser.add_argument(
+    "--checks",
+    default=False,
+    type=bool,
+    help="check if data are stored accordingly",
+)
 args = parser.parse_args()
 
 init_licenses_path = args.initial_licenses
@@ -51,3 +58,17 @@ license_changed.to_sql("license_changes", conn, if_exists="append", index=False)
 
 conn.close()
 print("data stored!")
+
+if args.checks:
+    conn = sqlite3.connect(sql_db_path)
+    print("checking initial_licenses")
+    print(pd.read_sql(
+    "SELECT * FROM initial_licenses LIMIT 10",
+    conn
+))
+    print("checking license_chnages")
+    print(pd.read_sql(
+    "SELECT * FROM license_changes LIMIT 10",
+    conn
+))
+    print("checking done!")

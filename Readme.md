@@ -190,14 +190,14 @@ dbt debug
 
 and then run!
 ```shell
-
+dbt clean
 dbt run --full-refresh
 ```
 **TODO**: add seeding for csv ?
 
 ### work in progress
 
-This should be automatized, qnd these scripts sotred in a `helper` folder:
+**TODO**: This should be automatized, qnd these scripts sotred in a `helper` folder:
 ```shell
 cd app
 python create_db.py  # create db with sql/creqte.sql queries

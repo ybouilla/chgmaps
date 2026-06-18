@@ -5,9 +5,10 @@ models:
 
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - date
-            - type
+          arguments:
+            combination_of_columns:
+              - date
+              - type
 
     columns:
       - name: active_license_count

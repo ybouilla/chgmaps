@@ -2,7 +2,6 @@ version: 2
 
 sources:
   - name: raw
-    schema: raw
 
     tables:
       - name: initial_licenses
@@ -19,7 +18,8 @@ sources:
           - name: renewable
             tests:
               - accepted_values:
-                  values: [0, 1]
+                  arguments:
+                    values: [0, 1]
 
       - name: license_changes
         columns:
@@ -39,4 +39,5 @@ sources:
           - name: renewable
             tests:
               - accepted_values:
-                  values: [0, 1]
+                  arguments:
+                    values: [0, 1]

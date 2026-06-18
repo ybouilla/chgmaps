@@ -5,9 +5,10 @@ models:
 
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - license_id
-            - date
+          arguments:
+            combination_of_columns:
+              - license_id
+              - date
 
     columns:
       - name: renewable
@@ -21,5 +22,6 @@ models:
       - name: license_id
         tests:
           - relationships:
-              to: ref('stg_initial_licenses')
-              field: license_id
+              arguments:
+                to: ref('stg_initial_licenses')
+                field: license_id

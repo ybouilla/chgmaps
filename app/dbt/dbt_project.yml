@@ -9,3 +9,4 @@ model-paths: ["models"]
 models:
   my_project:
     +materialized: view
+    +schema: null
