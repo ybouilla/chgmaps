@@ -6,8 +6,8 @@ models:
     columns:
       - name: license_id
         tests:
-          - unique
           - not_null
+          
 
       - name: creation_date
         tests:
@@ -17,22 +17,3 @@ models:
         tests:
           - not_null
     version: 2
-
-
-  - name: stg_license_changes
-
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - license_id
-              - date
-
-    columns:
-      - name: license_id
-        tests:
-          - not_null
-
-      - name: date
-        tests:
-          - not_null

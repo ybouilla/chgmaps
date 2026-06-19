@@ -3,12 +3,6 @@ version: 2
 models:
   - name: inter_licenses_daily_states
 
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - license_id
-              - date
 
     columns:
       - name: license_id

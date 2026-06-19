@@ -2,7 +2,7 @@
 {{ config(materialized='view') }}
 with source as (
 
-    select * from license_changes --{{ source('raw', 'license_changes') }}
+    select * from license_changes 
 
 ),
 

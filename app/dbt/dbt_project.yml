@@ -1,4 +1,4 @@
-name: 'my_project'
+name: 'pipeline_transf'
 version: '1.0'
 config-version: 2
 
@@ -7,6 +7,6 @@ profile: 'default'
 model-paths: ["models"]
 
 models:
-  my_project:
+  pipeline_transf:
     +materialized: view
     +schema: null
