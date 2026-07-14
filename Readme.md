@@ -67,12 +67,19 @@ The script requieres both csv files `initial_licenses.csv`and `license_changes.c
 It outputs `transformed.csv` in the `csv` folder.
 
 ### Storage in SQL database:
-For database usage, we are going to use **SQlite**.
+For database usage, we are going to use **PostgreSQL**.
+
+PostgreSQL provides a way to serve through Docker
+
+To run postgre service, start its servcie:
+```shell
+sudo service postgresql start
+```
 
 SQL queries are stored in `app/sql` folder.
 Process:
 - `create.sql` is used to create the database
-- The python script `app/add_database.py` can be used to load data generated from the csv files inside databases.
+- The python script `app/add_database.py` can be used to load data generated from the csv files inside databases. For that one can run `uv run python -m app.create_db`
 - `req.sql` (SQL query) is used to mimick the behaviour of transformation.py but whithin the docker file. 
 
 ## 4. Industrialisation and testing steps : Docker and Tests
@@ -137,7 +144,7 @@ To run the test, kindly execute from a terminal:
 `uv run pytest -v app/tests`
 
 #### 6.2 Tests through dbt
-TO test dbt, run:
+To test dbt, run:
 
 ```shell
 dbt run  # always perform a dbt run before doing tests
@@ -157,6 +164,14 @@ Several tests are provided:
 - **consistency tests**: `test_data_consistency.py`checks if generated data are consistent, data integrity checks
 
 ## DBT addition :
+
+Populate Postgresql database
+
+```shell
+sudo service postgresql start
+uv run python -m app.create_db  # create db with sql/creqte.sql queries
+uv run python -m app.add_database --initial-licenses "app/csv/initial_licenses.csv" --license-changes "app/csv/license_changes.csv"
+``` 
 
 ### dbt queries strucutre
 ```
@@ -198,11 +213,7 @@ dbt run --full-refresh
 ### work in progress
 
 **TODO**: This should be automatized, qnd these scripts sotred in a `helper` folder:
-```shell
-cd app
-python create_db.py  # create db with sql/creqte.sql queries
-python add_database.py --initial-licenses "csv/initial_licenses.csv" --license-changes "csv/license_changes.csv" --db test.db
-``` 
+
 
 ### dbt workflow
 

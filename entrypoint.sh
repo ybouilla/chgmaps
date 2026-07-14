@@ -7,6 +7,7 @@ case "$MODE" in
     echo "Running tests..."
     exec pytest -v app/tests
     ;;
+      
   pipeline)
     echo "Running pipeline..."
     echo "Running data generation..."

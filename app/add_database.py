@@ -1,8 +1,10 @@
 import argparse
 from pathlib import Path
 
+from dotenv import load_dotenv
 import pandas as pd
-import sqlite3
+from sqlalchemy import create_engine, Date
+import os
 
 ## to be used in docker only
 
@@ -26,12 +28,12 @@ parser.add_argument(
     help="Path to license_changes.csv",
 )
 
-parser.add_argument(
-    "--db",
-    default="data.db",
-    type=Path,
-    help="Path to SQLite database (default: data.db)",
-)
+# parser.add_argument(
+#     "--db",
+#     default="data.db",
+#     type=Path,
+#     help="Path to SQLite database (default: data.db)",
+# )
 
 
 parser.add_argument(
@@ -42,33 +44,48 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+current_folder = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(current_folder, "config", ".env.postgre")) 
+
 init_licenses_path = args.initial_licenses
 license_changes_path = args.license_changes
 # Load CSV
 init_licenses = pd.read_csv(init_licenses_path, header=0, index_col=False)
 license_changed = pd.read_csv(license_changes_path, header=0, index_col=False)
 # Connect to SQLite
-sql_db_path = args.db
-conn = sqlite3.connect(sql_db_path)
+#sql_db_path = args.db
+
+# PostgreSQL connection
+engine = create_engine(
+    f"postgresql+psycopg://"
+     f"{os.getenv('DB_USER')}:"
+    f"{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST', 'localhost')}:"
+    f"{os.getenv('DB_PORT', '5432')}/"
+    f"{os.getenv('DB_NAME')}"
+)
 
 # Append into existing table (IMPORTANT: table already exists)
-init_licenses.to_sql("initial_licenses", conn, if_exists="append", index=False)
+init_licenses["creation_date"] = pd.to_datetime(init_licenses["creation_date"]).dt.date
+init_licenses.to_sql("initial_licenses", engine, if_exists="replace", index=False, dtype={"creation_date": Date()})
 
-license_changed.to_sql("license_changes", conn, if_exists="append", index=False)
+license_changed["date"] = pd.to_datetime(license_changed["date"]).dt.date
+license_changed.to_sql("license_changes", engine, if_exists="replace", index=False,
+                       dtype={"date": Date()})
 
-conn.close()
+
 print("data stored!")
 
 if args.checks:
-    conn = sqlite3.connect(sql_db_path)
+    
     print("checking initial_licenses")
     print(pd.read_sql(
     "SELECT * FROM initial_licenses LIMIT 10",
-    conn
+    engine
 ))
     print("checking license_chnages")
     print(pd.read_sql(
     "SELECT * FROM license_changes LIMIT 10",
-    conn
+    engine
 ))
-    print("checking done!")
+    print("checks done!")

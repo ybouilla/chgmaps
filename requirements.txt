@@ -7,5 +7,7 @@ dbt-bigquery==1.11.2
 dbt-extractor==0.6.0
 dbt-semantic-interfaces
 dbt-sqlite==1.10.0
+psycopg[binary]
+python-dotenv
 # pandera[pandas]
 # typing-extensions
