@@ -28,12 +28,12 @@ parser.add_argument(
     help="Path to license_changes.csv",
 )
 
-# parser.add_argument(
-#     "--db",
-#     default="data.db",
-#     type=Path,
-#     help="Path to SQLite database (default: data.db)",
-# )
+parser.add_argument(
+    "--db_host",
+    default="localhost",
+    type=Path,
+    help="db host name (default: localhost)",
+)
 
 
 parser.add_argument(
@@ -54,13 +54,15 @@ init_licenses = pd.read_csv(init_licenses_path, header=0, index_col=False)
 license_changed = pd.read_csv(license_changes_path, header=0, index_col=False)
 # Connect to SQLite
 #sql_db_path = args.db
-
+db_host = args.db_host 
+if db_host == "localhost": # default
+    db_host= os.getenv('DB_HOST', )
 # PostgreSQL connection
 engine = create_engine(
     f"postgresql+psycopg://"
      f"{os.getenv('DB_USER')}:"
     f"{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST', 'localhost')}:"
+    f"{db_host}:"
     f"{os.getenv('DB_PORT', '5432')}/"
     f"{os.getenv('DB_NAME')}"
 )

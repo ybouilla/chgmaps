@@ -17,15 +17,15 @@ case "$MODE" in
     python3 -m app.validate_csv
 
     echo "Initializing database..."
-    sqlite3 /app/data.db < /app/app/sql/create.sql
+    PGPASSWORD=my_password psql -h db -U myuser -d licenses_db -f /app/app/sql/create.sql
 
     echo "Adding to database..."
-    python3 -m app.add_database
+    python3 -m app.add_database --db_host db
 
     echo "Running transformations (through python/ pandas)..."
     python3 -m app.transformation
     echo "Running transformations (through SQL)..."
-    sqlite3 /app/data.db < /app/app/sql/req.sql
+    PGPASSWORD=my_password psql -h db -U myuser -d licenses_db -f /app/app/sql/req.sql
 
     echo "Done."
         ;;

@@ -6,6 +6,9 @@ WORKDIR /app
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     sqlite3 \
+    libpq-dev \
+    postgresql-client \
+    gcc \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

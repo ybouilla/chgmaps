@@ -505,7 +505,7 @@ def compute_daily_price_diff(df: pd.DataFrame) -> pd.DataFrame:
         - daily_price_diff
     """
     # df = df.copy()
-    import pdb; pdb.set_trace()
+
     # ensure correct order for diff computation
     df = df.sort_values(["type", "date"])
 

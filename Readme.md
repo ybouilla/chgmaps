@@ -108,7 +108,7 @@ An entrypoint file has been made in order to execute the different element of th
 
 ### 5.1 Conception
 
-* late-arriving data: lookback window(last_processed_timestamp - window), ensuring that delayed records are still captured,  to make sure no data is  missed
+* late-arriving data: lookback window (last_processed_timestamp - window), ensuring that delayed records are still captured,  to make sure no data is  missed
 * idempotence:  idempotent is made through upserts or deduplication based on a primary key.
 
 ### 5.2 Incremental pipeline using python
@@ -138,6 +138,22 @@ I made a script that reproduce an incremental pipeline, with the following chara
 
 Hence, one can run the incremental pipeline every hours, and execute the backfill pipeline when needed (eg when data arrive late).
 
+
+## Orchestration through Docker compose
+
+Use:
+```shell
+MODE=pipeline docker compose --env-file ./app/config/.env.postgre build --no-cache
+
+MODE=pipeline docker compose --env-file ./app/config/.env.postgre  up
+```
+
+End docker compose services
+
+```shell
+docker  compose --env-file ./app/config/.env.postgre down
+docker volume rm chgmaps_postgres_data
+```
 ### 6. Tests (pytest)
 #### 6.1 Tests 
 To run the test, kindly execute from a terminal:
@@ -192,6 +208,7 @@ models/
 
 First, run dbt dependencies
 ```shell
+cd app/dbt
 dbt deps
 dbt compile
 
