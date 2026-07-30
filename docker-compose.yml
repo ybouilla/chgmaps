@@ -38,7 +38,7 @@ services:
         condition: service_healthy
 
     environment:
-      MODE: pipeline
+      MODE: ${MODE:-pipeline}
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: licenses_db

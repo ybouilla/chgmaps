@@ -95,9 +95,9 @@ Second, run docker using
 docker run -v $(pwd)/app/mnt:/app/app/csv -it pipeline 
 ```
 
-Data and logs can be accessed using mounted folder: `app/mnt`
+Data and logs can be accessed using mounted folder (freshly created): `app/mnt`
 An entrypoint file has been made in order to execute the different element of the pipeline, ie:
-- sql database (made using SQlite)
+- sql database (made using PostgreSQL)
 - data generation
 - data validation
 - data storage in database
@@ -154,30 +154,6 @@ End docker compose services
 docker  compose --env-file ./app/config/.env.postgre down
 docker volume rm chgmaps_postgres_data
 ```
-### 6. Tests (pytest)
-#### 6.1 Tests 
-To run the test, kindly execute from a terminal:
-`uv run pytest -v app/tests`
-
-#### 6.2 Tests through dbt
-To test dbt, run:
-
-```shell
-dbt run  # always perform a dbt run before doing tests
-dbt test
-```
-
-
-#### 6.3 Tests through docker
-To launch test suit through docker; one can use:
-```shell
-docker run -e MODE=test -it pipeline 
-```
-**Test structure**:
-Several tests are provided:
-- **unit tests**: `test_validate.py` and `test_transformation.py`
-- **integration tests**: `test_pipeline.py` executing the whole pipeline
-- **consistency tests**: `test_data_consistency.py`checks if generated data are consistent, data integrity checks
 
 ## DBT addition :
 
@@ -256,6 +232,32 @@ stg_initial_licenses
         ▼                     ▼
      calendar ─────────► mart_license_metrics
 ```
+### 6. Tests (pytest)
+#### 6.1 Tests 
+To run the test, kindly execute from a terminal:
+`uv run pytest -v app/tests`
+
+#### 6.2 Tests through dbt
+To test dbt, run:
+
+```shell
+cd app/dbt
+dbt run  # always perform a dbt run before doing tests
+dbt test
+```
+
+#### 6.3 Tests through docker
+To launch test suit through docker; one can use:
+```shell
+docker run -e MODE=test -it pipeline 
+```
+**Test structure**:
+Several tests are provided:
+- **unit tests**: `test_validate.py` and `test_transformation.py`
+- **integration tests**: `test_pipeline.py` executing the whole pipeline
+- **consistency tests**: `test_data_consistency.py`checks if generated data are consistent, data integrity checks
+
+
 
 ## TODO: 
 1. create CI

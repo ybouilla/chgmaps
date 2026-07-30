@@ -8,11 +8,12 @@ with recursive dates(date_day) as (
 
     union all
 
-    select date(date_day, '+1 day')
+    select date_day + 1
+    -- date(date_day, '+1 day') if using sqlite
     from dates
     where date_day < (
         select max(date)
-        from {{ ref('inter_state_licenses') }}
+        from {{ ref('inter_state_licenses') }} as dd
     )
 
 )

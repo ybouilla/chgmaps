@@ -7,7 +7,39 @@ case "$MODE" in
     echo "Running tests..."
     exec pytest -v app/tests
     ;;
-      
+  test-dbt)
+    echo "Running test-dbt"
+    echo "Initializing database..."
+    PGPASSWORD=my_password psql -h db -U myuser -d licenses_db -f /app/app/sql/create.sql
+
+    echo "Adding to database..."
+    python3 -m app.main_data_generation
+    python3 -m app.add_database
+
+    dbt run
+    dbt test
+  ;;
+
+  dbt-pipeline)
+    echo "Running dbt-pipeline"
+    echo "checks"
+    ls -l /app/app/dbt
+    echo "Initializing database..."
+    PGPASSWORD=my_password psql -h db -U myuser -d licenses_db -f /app/app/sql/create.sql
+    echo "creating datasets"
+    python3 -m app.main_data_generation
+    echo "Adding to database..."
+    python3 -m app.add_database --db_host db
+    dbt clean --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
+    dbt deps --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
+    dbt compile --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
+    
+    dbt run --full-refresh --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
+
+    echo "dbt done"
+    cp /app/app/dbt/logs/* /app/app/csv/
+  
+    ;;
   pipeline)
     echo "Running pipeline..."
     echo "Running data generation..."

@@ -54,7 +54,7 @@ final as (
             ) rn
         from states
 
-    )
+    ) s
     where rn = 1
 
 )

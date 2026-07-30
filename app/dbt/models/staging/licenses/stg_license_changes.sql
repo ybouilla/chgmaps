@@ -18,7 +18,7 @@ dedup as (
             ) as rn
         from source
 
-    )
+    ) s
     where rn = 1
 
 )
