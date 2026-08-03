@@ -86,13 +86,20 @@ Process:
 
 ### Industrialisation through Docker
 To use the pipeline within docker, run this command: 
-First build, using 
+First build & run, using 
 ```shell
-docker build -t pipeline .
+docker compose up --build --abort-on-container-exit --exit-code-from pipeline
 ```
+(one shot data pipeline)
+
 Second, run docker using 
 ```shell
 docker run -v $(pwd)/app/mnt:/app/app/csv -it pipeline 
+```
+End services:
+
+```shell
+docker compose down -v
 ```
 
 Data and logs can be accessed using mounted folder (freshly created): `app/mnt`
@@ -249,6 +256,7 @@ dbt test
 #### 6.3 Tests through docker
 To launch test suit through docker; one can use:
 ```shell
+docker build -t pipeline .
 docker run -e MODE=test -it pipeline 
 ```
 **Test structure**:

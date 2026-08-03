@@ -14,10 +14,10 @@ case "$MODE" in
 
     echo "Adding to database..."
     python3 -m app.main_data_generation
-    python3 -m app.add_database
+    python3 -m app.add_database --db_host db
 
-    dbt run
-    dbt test
+    dbt run --full-refresh --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
+    dbt test --profiles-dir /app/app/dbt_profile_docker/ --project-dir /app/app/dbt
   ;;
 
   dbt-pipeline)
