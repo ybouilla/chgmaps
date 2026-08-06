@@ -1,0 +1,123 @@
+# test docker containers
+name: Tests
+
+on:
+  push:
+     branches:
+      - dev
+      - master
+      - docker_compose_postgre
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
+    branches:
+      - dev
+      - master
+
+jobs:
+
+  all_tests:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: build docker
+        run: docker build -t pipeline . 
+      - name: test docker
+        run: docker run  --name pipeline-test -e MODE=test pipeline test
+      - name: dispaly logs
+        if: failure()
+        run: |
+            docker logs pipeline-test
+            docker inspect pipeline-test
+      - name: clean up
+        run: docker rm -f pipeline
+
+  docker_compose:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Verify Docker
+      run: |
+          docker --version
+          docker compose version
+    - name: check env vars
+      run: docker compose config
+    - name: Start services
+      run: docker compose up --build --abort-on-container-exit --exit-code-from pipeline
+
+    - name: Show running containers
+      run: docker compose ps
+
+    - name: Show logs on failure
+      if: failure()
+      run: docker compose logs
+
+    - name: Tear down
+      if: always()
+      run: docker compose down -v
+
+  docker_compose_dbt:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Verify Docker
+      run: |
+          docker --version
+          docker compose version
+    - name: check env vars
+      run: docker compose config
+    - name: Start services
+      run: MODE=dbt-pipeline docker compose up --build --abort-on-container-exit --exit-code-from pipeline
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+      with:
+        version: "0.11.28"
+    - name: check data has been produced
+      run: |
+        docker compose up -d db
+        uv venv --python 3.12
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv run python -m app.check_docker_db
+        docker compose down -v
+
+    - name: Start dbt tests
+      run: |
+        docker compose down -v
+        MODE=test-dbt docker compose up --build --abort-on-container-exit --exit-code-from pipeline
+
+    - name: Show running containers
+      run: docker compose ps
+
+    - name: Show logs on failure
+      if: failure()
+      run: docker compose logs
+
+    - name: Tear down
+      if: always()
+      run: docker compose down -v
