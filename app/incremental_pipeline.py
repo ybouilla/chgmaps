@@ -1,6 +1,7 @@
 import argparse
 import csv
 import os
+from pathlib import Path
 
 import pandas as pd
 from app.config import PROJECT_ROOT
@@ -8,7 +9,7 @@ from app.transformation import transform_pipeline
 from app.logger import  set_logging, logger
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Tuple
-
+import argparse
 from app.incremental_pipeline_tools.state_manager import parse_ts, load_checkpoint, save_checkpoint
 
 
@@ -21,6 +22,7 @@ LOOKBACK_MINUTES = 0  # lookback
 
 N_BATCH = 10  # number of batches
 MAX_RETRIES = 3  # number of retries to process when a batch of data fails
+
 
 
 
@@ -430,7 +432,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--mode", choices=["incremental", "backfill"], default="incremental")
+    parser.add_argument("--mode", choices=["incremental", "backfill", "test"], default="incremental")
     parser.add_argument("--days", type=int, default=5)
 
     args = parser.parse_args()
@@ -445,7 +447,7 @@ if __name__ == "__main__":
                               "target_init_license.csv", "target_chgs.csv",
                                folder_name, days=args.days)
         
-    elif args.mode == "test_incremental":
+    elif args.mode == "test":
         #########################################
         # this section is reserved for testing
         start, end = "2023-04-25T10:00:00", "2023-04-30T10:10:00"

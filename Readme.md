@@ -88,6 +88,7 @@ Process:
 To use the pipeline within docker, run this command: 
 First build & run, using 
 ```shell
+docker compose build base
 docker compose up --build --abort-on-container-exit --exit-code-from pipeline
 ```
 (one shot data pipeline)
@@ -122,7 +123,7 @@ An entrypoint file has been made in order to execute the different element of th
 
 For simplicity sake; i will save states in a csv file `states/state.csv`, but this would be not suitable for production.
 To run the incremental pipeline, enter:
-`run uv run python -m app.incremental_pipeline `
+`uv run python -m app.incremental_pipeline `
 
 In the code, pipeline 's lookback is set using `LOOKBACK_MINUTES`. 
 A lookback window is used: `last_processed_date - window`
@@ -150,7 +151,8 @@ Hence, one can run the incremental pipeline every hours, and execute the backfil
 
 Use:
 ```shell
-MODE=pipeline docker compose --env-file ./app/config/.env.postgre build --no-cache
+MODE=pipeline docker compose --env-file ./app/config/.env.postgre build --no-cache base
+MODE=pipeline docker compose --env-file ./app/config/.env.postgre build --no-cache pipeline
 
 MODE=pipeline docker compose --env-file ./app/config/.env.postgre  up
 ```
